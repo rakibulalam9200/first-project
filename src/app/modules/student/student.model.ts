@@ -1,13 +1,15 @@
 import { Schema, model } from 'mongoose'
 import validator from 'validator'
+import bcrypt from 'bcrypt'
 import {
   StudentModel,
   TGuardian,
   TLocalGuardian,
   TStudent,
   TUserName,
-  studentMethods,
+  // studentMethods,
 } from './student.interface'
+import config from '../../config'
 
 // sub schema
 const userNameSchema = new Schema<TUserName>({
@@ -85,8 +87,13 @@ const localGuardianSchema = new Schema<TLocalGuardian>({
 })
 
 // create schema
-const studentSchema = new Schema<TStudent,StudentModel>({
+const studentSchema = new Schema<TStudent, StudentModel>({
   id: { type: String, required: true, unique: true },
+  password: {
+    type: String,
+    required: [true, 'Password is required'],
+    maxlength: [20, "Password cann't be 20"],
+  },
   name: {
     type: userNameSchema,
     required: true,
@@ -145,12 +152,26 @@ const studentSchema = new Schema<TStudent,StudentModel>({
   },
 })
 
+// pre save middleware/hook : will work on create/save method
+studentSchema.pre('save', async function (next) {
+  // console.log(this, 'pre hook : we will save the data')
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
+  const user = this // current document which is processing
+  user.password = await bcrypt.hash(
+    user.password,
+    Number(config.bcrypt_salt_rounds),
+  )
+  next()
+})
 
-
+// post save middleware/hook
+studentSchema.post('save', function () {
+  console.log(this, 'post hook : we saved our data')
+})
 
 // creating a custom static method
-studentSchema.statics.isUserExists = async function (id:string) {
-  const existingUser = await Student.findOne({id})
+studentSchema.statics.isUserExists = async function (id: string) {
+  const existingUser = await Student.findOne({ id })
   return existingUser
 }
 
@@ -161,4 +182,4 @@ studentSchema.statics.isUserExists = async function (id:string) {
 // }
 
 // create model
-export const Student = model<TStudent,StudentModel>('Student', studentSchema)
+export const Student = model<TStudent, StudentModel>('Student', studentSchema)
