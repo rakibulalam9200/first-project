@@ -7,18 +7,21 @@ const createStudent = async (req: Request, res: Response) => {
     const { student: studentData } = req.body
 
     // data validation using Joi
-    const { error, value } = studentValidationSchema.validate(studentData)
+    // const { error, value } = studentValidationSchema.validate(studentData)
     // will call service func to send to this data
 
-    if (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Something went wrong!',
-        error: error.details,
-      })
-    }
+    // if (error) {
+    //   res.status(500).json({
+    //     success: false,
+    //     message: 'Something went wrong!',
+    //     error: error.details,
+    //   })
+    // }
 
-    const result = await StudentServices.createStudentIntoDB(value)
+    // const result = await StudentServices.createStudentIntoDB(value)
+
+    const zodParseData = studentValidationSchema.parse(studentData)
+    const result = await StudentServices.createStudentIntoDB(zodParseData)
 
     // send response
     res.status(200).json({
@@ -26,8 +29,13 @@ const createStudent = async (req: Request, res: Response) => {
       message: 'Student is created successfully',
       data: result,
     })
-  } catch (error) {
-    console.log(error)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error:any) {
+    res.status(500).json({
+      success: false,
+      message: 'Something went wrong!',
+      error: error.issues,
+    })
   }
 }
 
