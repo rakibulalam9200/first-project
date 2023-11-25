@@ -1,23 +1,26 @@
-import { Student } from './student.interface'
-import { StudentModel } from './student.model'
+import { TStudent } from './student.interface'
+import { Student } from './student.model'
 
-const createStudentIntoDB = async (studentData: Student) => {
+const createStudentIntoDB = async (studentData: TStudent) => {
   // const result = await StudentModel.create(student)// build in static method
 
-  // Create student data using mongoose build in instance method 
+  // Create student data using mongoose build in instance method
   // by creating object can save method
-  const student = new StudentModel(studentData)
+  const student = new Student(studentData)
+  if(await student.isUserExists(studentData.id)){
+    throw new Error("User already exists!")
+  }
   const result = student.save()
   return result
 }
 
 const getAllStudentsFromDB = async () => {
-  const result = await StudentModel.find()
+  const result = await Student.find()
   return result
 }
 
 const getSingletudentFromDB = async (id: string) => {
-  const result = await StudentModel.findOne({ id })
+  const result = await Student.findOne({ id })
   return result
 }
 
